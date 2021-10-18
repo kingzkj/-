@@ -1,0 +1,132 @@
+# -*- coding: utf-8 -*-
+
+import matplotlib.pyplot as plt
+from pymysql import Connect
+from random import random
+
+
+def get_color_list(num: int) -> list:
+    """获取颜色列表（随机）"""
+    result = []
+    for i in range(num):
+        color_i = (random(), random(), random())
+        result.append(color_i)
+    return result
+
+
+def film_language():
+    """按语种统计电影的数量，并绘制图表（柱形图和饼图）。涉及表：dim_film"""
+    sql = """SELECT film_language, count(1) num FROM dim_film 
+    GROUP BY film_language ORDER BY film_language"""
+    cur = conn.cursor()
+    cur.execute(sql)
+    data = cur.fetchall()
+    x_data = []
+    y_data = []
+    for i in data:
+        if i[0] == "" or i[0] is None:
+            continue
+        x_data.append(i[0])
+        y_data.append(i[1])
+    # 柱形图
+    colors = get_color_list(len(x_data))
+    plt.bar(x=x_data, height=y_data, color=colors)
+    for i, j in enumerate(y_data):  # 在每一根柱子上面写上具体数值
+        # x,y指定位置，s是要写的字符串，ha设置文字居中
+        plt.text(x=i, y=j + 0.2, s=str(j), ha="center")
+    plt.title("各语种的电影数量")
+    plt.show()
+    # 饼图
+    plt.pie(x=y_data, labels=x_data, autopct="%.1f%%", colors=colors)
+    plt.title("各语种的电影占比")
+    plt.show()
+
+
+def customer_country():
+    """按国家统计客户的数量，并绘制图表：一个柱形图。
+    只取客户数量排名前10的国家。涉及表：dim_customer"""
+    sql = """SELECT customer_country, count(1) num FROM dim_customer GROUP BY customer_country"""
+    cur = conn.cursor()
+    cur.execute(sql)
+    data = cur.fetchall()
+    # 截取数据，只取排名前10的国家
+    data = list(sorted(data, key=lambda x: x[1], reverse=True))[:9]
+    x_data = []
+    y_data = []
+    for i in data:
+        x_data.append(i[0])
+        y_data.append(i[1])
+    # 柱形图
+    colors = get_color_list(len(x_data))
+    plt.bar(x=x_data, height=y_data, color=colors)
+    for i, j in enumerate(y_data):  # 在每一根柱子上面写上具体数值
+        # x,y指定位置，s是要写的字符串，ha设置文字居中
+        plt.text(x=i, y=j + 0.2, s=str(j), ha="center")
+    plt.title("各个国家的客户数（前10名）")
+    plt.show()
+
+
+def film_amount():
+    """统计创收最高的5部电影的营收额，并绘制成一个柱形图。
+    涉及表：dim_film、fact_rental"""
+    sql = """SELECT a.film_title, ROUND(sum(b.rental_amount), 2) num FROM dim_film a, fact_rental b 
+    WHERE a.film_key = b.film_key GROUP BY a.film_title"""
+    cur = conn.cursor()
+    cur.execute(sql)
+    data = cur.fetchall()
+    # 截取数据，只取排名前5的电影
+    data = list(sorted(data, key=lambda x: x[1], reverse=True))[:5]
+    x_data = []
+    y_data = []
+    for i in data:
+        x_data.append(i[0])
+        y_data.append(i[1])
+    # 柱形图
+    colors = get_color_list(len(x_data))
+    plt.bar(x=x_data, height=y_data, color=colors)
+    for i, j in enumerate(y_data):  # 在每一根柱子上面写上具体数值
+        # x,y指定位置，s是要写的字符串，ha设置文字居中
+        plt.text(x=i, y=j + 0.2, s=str(j), ha="center")
+    plt.title("创收排名前五的电影营收额")
+    plt.show()
+
+
+def staff_amount():
+    """统计所有职员的营业额，并绘制图表（柱形图、饼图）。
+    涉及表：dim_staff、fact_rental"""
+    sql = """SELECT a.staff_first_name, ROUND(sum(b.rental_amount), 2) num FROM dim_staff a, fact_rental b 
+    WHERE a.staff_key = b.staff_key GROUP BY a.staff_first_name"""
+    cur = conn.cursor()
+    cur.execute(sql)
+    data = cur.fetchall()
+    x_data = []
+    y_data = []
+    for i in data:
+        x_data.append(i[0])
+        y_data.append(i[1])
+    # 柱形图
+    colors = get_color_list(len(x_data))
+    plt.bar(x=x_data, height=y_data, color=colors)
+    for i, j in enumerate(y_data):  # 在每一根柱子上面写上具体数值
+        # x,y指定位置，s是要写的字符串，ha设置文字居中
+        plt.text(x=i, y=j + 0.2, s=str(j), ha="center")
+    plt.title("各个职员的营业额")
+    plt.show()
+
+
+if __name__ == "__main__":
+    """数据库连接相关变量  
+    host：数据库主机IP， port：数据库端口号
+    user：数据库用户名， password：数据库用户密码 
+    database：数据库实例名， charset：数据库编码集"""
+    CONN_PARAM = dict(host="localhost", port=3306, user="root", password="root",
+                      database="sakila_dwh", charset="utf8")
+    conn = Connect(**CONN_PARAM)
+    # 替换sans-serif字体，设置为微软雅黑，这可以解决中文乱码问题
+    plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
+    # 解决坐标轴负数的负号显示问题
+    plt.rcParams['axes.unicode_minus'] = False
+    film_language()
+    customer_country()
+    film_amount()
+    staff_amount()
