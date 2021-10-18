@@ -1,0 +1,55 @@
+# 散点图
+import pandas as pd
+import matplotlib.pyplot as plt
+# 散点图
+plt.rcParams['font.sans-serif']=['FangSong']
+plt.rcParams['axes.unicode_minus']=False
+
+data = pd.read_excel('广州天气数据.xls', '广州天气数据')
+
+x=data['日期'].tolist()
+y=data['最高气温(℃)'].tolist()
+
+plt.figure(figsize=(20, 8))
+plt.ylim(0, 30)
+plt.scatter(x, y, c='blue', marker='d')
+plt.show()
+
+#柱状图
+from pyecharts import Bar
+import pandas as pd
+#柱状图
+data = pd.read_excel('广州天气数据.xls', '广州天气数据')
+x = data['日期'].tolist()
+y = data['空气质量指数'].tolist()
+
+style=dict(xaxis_rotate=30, is_toolbox_show=False)
+
+fig = Bar('柱形图')
+fig.add('', x, y, **style, is_label_show=True)
+fig.render("柱状图.html")
+
+
+#折线图
+from pyecharts import Line
+import pandas as pd
+#折线图
+data = pd.read_excel('广州天气数据.xls', '广州天气数据')
+x = data['日期'].tolist()
+y = data['最高气温(℃)'].tolist()
+
+style=dict(xaxis_rotate=30, is_toolbox_show=False)
+
+line=Line('折线图', title_pos='center', title_top='18')
+
+line.add('', x, y, **style, is_label_show=True, mark_point=["max", "min"])
+
+line.render('折线图.html')
+
+
+
+
+
+
+
+
